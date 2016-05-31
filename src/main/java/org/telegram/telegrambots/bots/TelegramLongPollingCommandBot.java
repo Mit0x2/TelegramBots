@@ -1,25 +1,22 @@
 package org.telegram.telegrambots.bots;
 
-import org.telegram.telegrambots.BotLogger;
-import org.telegram.telegrambots.TelegramApiException;
-import org.telegram.telegrambots.api.commands.BotCommand;
-import org.telegram.telegrambots.api.commands.CommandRegistry;
-import org.telegram.telegrambots.api.commands.ICommandRegistry;
-import org.telegram.telegrambots.api.methods.send.SendMessage;
+
+import org.telegram.telegrambots.bots.commands.BotCommand;
+import org.telegram.telegrambots.bots.commands.CommandRegistry;
+import org.telegram.telegrambots.bots.commands.ICommandRegistry;
 import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * This class adds command functionality to the TelegramLongPollingBot
  *
  * @author tschulz
  */
-public abstract class TelegramLongPollingCommandBot extends AbsSender implements ITelegramLongPollingBot, ICommandRegistry {
-
-    public static final String LOGTAG = "TelegramLongPollingCommandBot";
+public abstract class TelegramLongPollingCommandBot extends TelegramLongPollingBot implements ICommandRegistry {
     private final CommandRegistry commandRegistry;
 
     /**
@@ -27,7 +24,8 @@ public abstract class TelegramLongPollingCommandBot extends AbsSender implements
      * Use ICommandRegistry's methods on this bot to register commands
      */
     public TelegramLongPollingCommandBot() {
-        this.commandRegistry = new CommandRegistry(getBotToken());
+        super();
+        this.commandRegistry = new CommandRegistry();
     }
 
     @Override
@@ -35,17 +33,9 @@ public abstract class TelegramLongPollingCommandBot extends AbsSender implements
         if (update.hasMessage()) {
             Message message = update.getMessage();
             if (message.isCommand()) {
-                if (!commandRegistry.executeCommand(this, message)) {
-                    SendMessage sendMessage = new SendMessage();
-                    sendMessage.setChatId(message.getChatId().toString());
-                    sendMessage.setText("The command you provided is not registered for this bot");
-                    try {
-                        sendMessage(sendMessage);
-                    } catch (TelegramApiException e) {
-                        BotLogger.error("Cannot send message", LOGTAG, e);
-                    }
+                if (commandRegistry.executeCommand(this, message)) {
+                    return;
                 }
-                return;
             }
         }
         processNonCommandUpdate(update);
@@ -76,10 +66,15 @@ public abstract class TelegramLongPollingCommandBot extends AbsSender implements
         return commandRegistry.getRegisteredCommands();
     }
 
+    @Override
+    public void registerDefaultAction(BiConsumer<AbsSender, Message> defaultConsumer) {
+        commandRegistry.registerDefaultAction(defaultConsumer);
+    }
+
     /**
      * Process all updates, that are not commands.
-     * Attention: commands, that have valid syntax but are not registered on this bot,
-     * won't be forwarded to this method!
+     * @warning Commands that have valid syntax but are not registered on this bot,
+     * won't be forwarded to this method <b>if a default action is present</b>.
      *
      * @param update the update
      */
