@@ -2,6 +2,9 @@ package org.telegram.telegrambots.api.methods.send;
 
 import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboard;
 
+import java.io.File;
+import java.io.InputStream;
+
 /**
  * @author Ruben Bermudez
  * @version 1.0
@@ -32,11 +35,13 @@ public class SendVideo {
      * users will receive a notification with no sound. Other apps coming soon
      */
     private Boolean disableNotification;
-    private Integer replayToMessageId; ///< Optional. If the message is a reply, ID of the original message
-    private ReplyKeyboard replayMarkup; ///< Optional. JSON-serialized object for a custom reply keyboard
+    private Integer replyToMessageId; ///< Optional. If the message is a reply, ID of the original message
+    private ReplyKeyboard replyMarkup; ///< Optional. JSON-serialized object for a custom reply keyboard
 
     private boolean isNewVideo; ///< True to upload a new video, false to use a fileId
     private String videoName; ///< Name of the video
+    private File newVideoFile; ///< New video file
+    private InputStream newVideoStream; ///< New video stream
 
     public SendVideo() {
         super();
@@ -79,22 +84,54 @@ public class SendVideo {
         return this;
     }
 
+    public Integer getReplyToMessageId() {
+        return replyToMessageId;
+    }
+
+    public SendVideo setReplyToMessageId(Integer replyToMessageId) {
+        this.replyToMessageId = replyToMessageId;
+        return this;
+    }
+
+    public ReplyKeyboard getReplyMarkup() {
+        return replyMarkup;
+    }
+
+    public SendVideo setReplyMarkup(ReplyKeyboard replyMarkup) {
+        this.replyMarkup = replyMarkup;
+        return this;
+    }
+
+    /**
+     * @deprecated Use {@link #getReplyToMessageId()} instead.
+     */
+    @Deprecated
     public Integer getReplayToMessageId() {
-        return replayToMessageId;
+        return getReplyToMessageId();
     }
 
-    public SendVideo setReplayToMessageId(Integer replayToMessageId) {
-        this.replayToMessageId = replayToMessageId;
-        return this;
+    /**
+     * @deprecated Use {@link #setReplyToMessageId(Integer)} instead.
+     */
+    @Deprecated
+    public SendVideo setReplayToMessageId(Integer replyToMessageId) {
+        return setReplyToMessageId(replyToMessageId);
     }
 
+    /**
+     * @deprecated Use {@link #getReplyMarkup()} instead.
+     */
+    @Deprecated
     public ReplyKeyboard getReplayMarkup() {
-        return replayMarkup;
+        return getReplyMarkup();
     }
 
-    public SendVideo setReplayMarkup(ReplyKeyboard replayMarkup) {
-        this.replayMarkup = replayMarkup;
-        return this;
+    /**
+     * @deprecated Use {@link #setReplyMarkup(ReplyKeyboard)} instead.
+     */
+    @Deprecated
+    public SendVideo setReplayMarkup(ReplyKeyboard replyMarkup) {
+        return setReplyMarkup(replyMarkup);
     }
 
     public boolean isNewVideo() {
@@ -103,6 +140,14 @@ public class SendVideo {
 
     public String getVideoName() {
         return videoName;
+    }
+
+    public File getNewVideoFile() {
+        return newVideoFile;
+    }
+
+    public InputStream getNewVideoStream() {
+        return newVideoStream;
     }
 
     public Boolean getDisableNotification() {
@@ -137,10 +182,32 @@ public class SendVideo {
         return this;
     }
 
+    /**
+     * Use this method to set the video to a new file
+     *
+     * @param video     Path to the new file in your server
+     * @param videoName Name of the file itself
+     *
+     * @deprecated use {@link #setNewVideo(File)} or {@link #setNewVideo(InputStream)} instead.
+     */
+    @Deprecated
     public SendVideo setNewVideo(String video, String videoName) {
         this.video = video;
         this.isNewVideo = true;
         this.videoName = videoName;
+        return this;
+    }
+
+    public SendVideo setNewVideo(File file) {
+        this.video = file.getName();
+        this.isNewVideo = true;
+        this.newVideoFile = file;
+        return this;
+    }
+
+    public SendVideo setNewVideo(InputStream inputStream) {
+        this.isNewVideo = true;
+        this.newVideoStream = inputStream;
         return this;
     }
 
@@ -151,10 +218,9 @@ public class SendVideo {
                 ", video='" + video + '\'' +
                 ", duration=" + duration +
                 ", caption='" + caption + '\'' +
-                ", replayToMessageId=" + replayToMessageId +
-                ", replayMarkup=" + replayMarkup +
+                ", replyToMessageId=" + replyToMessageId +
+                ", replyMarkup=" + replyMarkup +
                 ", isNewVideo=" + isNewVideo +
-                ", videoName='" + videoName + '\'' +
                 '}';
     }
 }
